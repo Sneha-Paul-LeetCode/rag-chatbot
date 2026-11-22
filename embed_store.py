@@ -58,8 +58,4 @@ def search(question, top_k=5):
 
 if __name__ == "__main__":
     build_index()
-
-    question = input("Ask something from your notes: ")
-    for text, meta in search(question):
-        print(f"\n--- {meta['section']} ({meta['topic']}) ---")
-        print(text[:300])
+    print("Index ready. Now run: python rag_chat.py")

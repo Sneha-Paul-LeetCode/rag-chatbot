@@ -23,6 +23,9 @@ FRONTMATTER = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
 MD_HEADING = re.compile(r"^(#{1,4})\s+(.+?)\s*#*\s*$")
 IMPORT_LINE = re.compile(r"^import .*$", re.MULTILINE)
 IMAGE = re.compile(r"!\[[^\]]*\]\([^)]*\)")
+HTML_TAGS = re.compile(r"</?(p|br|img|i|b|a|div|span|center|details|summary|sup|sub)\b[^>]*>", re.IGNORECASE)
+# Sections that are only lists of links (no knowledge)
+LINK_SECTION = re.compile(r"source\(s\)|sources|further reading|additional resources", re.IGNORECASE)
 
 
 def should_skip(path, root):
@@ -114,6 +117,7 @@ def split_markdown(text):
     text = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)
     text = IMPORT_LINE.sub("", text)
     text = IMAGE.sub("", text)
+    text = HTML_TAGS.sub("", text)
 
     sections = []
     stack = [(0, title)] if title else []      # (level, heading)
@@ -152,6 +156,8 @@ def chunk_document(doc, max_chars=1200, min_chars=120):
 
     chunks = []
     for heading, body in sections:
+        if heading and LINK_SECTION.search(heading.split(" > ")[-1]):
+            continue                          # skips "Source(s) and further reading" link lists
         pieces = [body] if len(body) <= max_chars else chunk_text(body)
         for piece in pieces:
             if len(piece) < min_chars:        # skips tiny leftovers
